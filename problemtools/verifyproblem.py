@@ -1149,6 +1149,7 @@ class Graders(ProblemPart):
     PART_NAME = 'grader'
 
     def setup(self):
+        self.format_data = formatversion.get_format_data(self.problem.probdir)
         self._graders: list = run.find_programs(os.path.join(self.problem.probdir, 'graders'),
                                           language_config=self.problem.language_config,
                                           work_dir=self.problem.tmpdir)
@@ -1162,7 +1163,11 @@ class Graders(ProblemPart):
             return self._check_res
         self._check_res = True
 
-        if self.problem.get(ProblemConfig)['type'] == 'pass-fail' and len(self._graders) > 0:
+        if formatversion.get_from_yaml(self.problem.probdir, "type") not in self.format_data.types:
+            self.error(f"Problem type '{formatversion.get_from_yaml(self.problem.probdir, 'type')}' not allowed. "
+                       f"Allowed types are {self.format_data.types}")
+
+        if formatversion.get_from_yaml(self.problem.probdir, "type") == 'pass-fail' and len(self._graders) > 0:
             self.error('There are grader programs but the problem is pass-fail')
 
         for grader in self._graders:
@@ -1231,6 +1236,19 @@ class Graders(ProblemPart):
             self.debug(f'Grade on {testcasegroup} is {verdict} ({score})')
 
         return (verdict, score)
+
+
+
+class ScoreAggregators(Graders):
+    _grader = run.get_tool("default_grader")
+
+    PART_NAME = "score aggregator"
+
+    def setup(self):
+        self.format_data = formatversion.get_format_data(self.problem.probdir)
+
+    def check(self, context: Context):
+        super.check(self)
 
 
 class OutputValidators(ProblemPart):
@@ -1739,6 +1757,7 @@ PROBLEM_FORMATS: dict[str, dict[str, list[Type[ProblemPart]]]] = {
     },
     '2023-07': { # TODO: Add all the parts
         'statement':    [ProblemStatement, Attachments],
+        'scorers':      [Graders]
     }
 }
 
