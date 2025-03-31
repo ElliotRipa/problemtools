@@ -1238,17 +1238,13 @@ class Graders(ProblemPart):
         return (verdict, score)
 
 
-
 class ScoreAggregators(Graders):
-    _grader = run.get_tool("default_grader")
-
     PART_NAME = "score aggregator"
 
     def setup(self):
         self.format_data = formatversion.get_format_data(self.problem.probdir)
-
-    def check(self, context: Context):
-        super.check(self)
+        self._graders = [run.get_tool("default_grader")]
+        print(self._graders)
 
 
 class OutputValidators(ProblemPart):
@@ -1757,7 +1753,7 @@ PROBLEM_FORMATS: dict[str, dict[str, list[Type[ProblemPart]]]] = {
     },
     '2023-07': { # TODO: Add all the parts
         'statement':    [ProblemStatement, Attachments],
-        'scorers':      [Graders]
+        'scorers':      [ScoreAggregators]
     }
 }
 
