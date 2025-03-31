@@ -18,11 +18,14 @@ class FormatData:
     name: str
     statement_directory: str
     statement_extensions: list[str]
+    types: list[str]
 
 
 FORMAT_DATACLASSES = {
-    VERSION_LEGACY: FormatData(name=VERSION_LEGACY, statement_directory="problem_statement", statement_extensions=["tex"]),
-    VERSION_2023_07: FormatData(name=VERSION_2023_07, statement_directory="statement", statement_extensions=["md", "tex"])
+    VERSION_LEGACY: FormatData(name=VERSION_LEGACY, statement_directory="problem_statement", statement_extensions=["tex"],
+                               types=["pass-fail", "scoring"]),
+    VERSION_2023_07: FormatData(name=VERSION_2023_07, statement_directory="statement", statement_extensions=["md", "tex"],
+                                types=["pass-fail", "scoring", "multi-pass", "interactive", "submit-answer"])
 }
 
 
@@ -43,6 +46,16 @@ def detect_problem_version(path) -> str:
     except Exception as e:
         raise VersionError(f"Error reading problem.yaml: {e}")
     return config.get('problem_format_version', VERSION_LEGACY)
+
+
+def get_from_yaml(path, attribute):
+    config_path = os.path.join(path, 'problem.yaml')
+    try:
+        with open(config_path) as f:
+            config: dict = yaml.safe_load(f) or {}
+    except Exception as e:
+        raise VersionError(f"Error reading problem.yaml: {e}")
+    return config.get(attribute, 'legacy')
 
 
 def get_format_data(path):
